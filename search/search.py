@@ -117,7 +117,6 @@ def breadthFirstSearch(problem):
     visited = []
     
     q.push((problem.getStartState(), []))
-    visited.append(problem.getStartState())
     
     while not q.isEmpty():
         curState, curPath = q.pop()
@@ -125,16 +124,19 @@ def breadthFirstSearch(problem):
         if problem.isGoalState(curState):
             return curPath
             
-        for nextState, action, cost in problem.getSuccessors(curState):
-            if nextState not in visited:
+        if curState not in visited:
+            visited.append(curState)
+            for nextState, action, cost in problem.getSuccessors(curState):
                 q.push((nextState, curPath + [action]))
-        
-                visited.append(nextState)
+            
     return []
 
 def uniformCostSearch(problem):
     "Search the node of least total cost first. "
     "*** YOUR CODE HERE ***"
+    # note in this method, it adds node to explored set at the same time when pushing it 
+    # to the queue, which is not the same as the pseudo code given by teacher
+    '''
     q = util.PriorityQueue()
     visited = {}
     
@@ -156,6 +158,24 @@ def uniformCostSearch(problem):
                 q.push((nextState, curPath + [action]), visited[nextState])
     
     return []
+    '''
+    q = util.PriorityQueue()
+    visited = []
+    
+    q.push((problem.getStartState(), [], 0), 0)
+    
+    while not q.isEmpty():
+        curState, curPath, curCost = q.pop()
+        
+        if problem.isGoalState(curState):
+            return curPath
+            
+        if curState not in visited:
+            visited.append(curState)
+            for nextState, action, cost in problem.getSuccessors(curState):
+                q.push((nextState, curPath + [action], curCost + cost), curCost + cost)
+    
+    return []
 
 def nullHeuristic(state, problem=None):
     """
@@ -167,8 +187,10 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     "Search the node that has the lowest combined cost and heuristic first."
     "*** YOUR CODE HERE ***"
-    # Use dictionary to implement the visited
+    # note in this method, it adds node to explored set at the same time when pushing it 
+    # to the queue, which is not the same as the pseudo code given by teacher
     '''
+    # Use dictionary to implement the visited
     q = util.PriorityQueue()
     visited = {}
     
@@ -196,9 +218,10 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     
     # Use set to implement the visited
     q = util.PriorityQueue()
-    visited = set()
+    visited = []
     
-    q.push((problem.getStartState(), [], 0), heuristic(problem.getStartState(), problem))
+    initHVal = heuristic(problem.getStartState(), problem)
+    q.push((problem.getStartState(), [], 0), initHVal)
     #visited.add(problem.getStartState())
     
     while not q.isEmpty():
@@ -206,12 +229,12 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         
         if problem.isGoalState(curState):
             return curPath
-        elif curState not in visited:
-            visited.add(curState)
+        
+        if curState not in visited:
+            visited.append(curState)
             for nextState, action, cost in problem.getSuccessors(curState):
-                h = heuristic(nextState, problem)
-                if nextState not in visited:
-                    q.push((nextState, curPath + [action], curCost + cost), curCost + cost + h)
+                hVal = heuristic(nextState, problem)
+                q.push((nextState, curPath + [action], curCost + cost), curCost + cost + hVal)
     return []
 # Abbreviations
 bfs = breadthFirstSearch
